@@ -38,7 +38,7 @@ impl Drop for NodeHandle {
 pub struct Node {
     handle: Rc<NodeHandle>,
     pub(crate) context: Rc<ContextHandle>,
-    pub(crate) subscriptions: Vec<Weak<SubscriptionBase>>,
+    pub(crate) subscriptions: Vec<Weak<dyn SubscriptionBase>>,
 }
 
 impl Node {
@@ -79,7 +79,7 @@ impl Node {
         })
     }
 
-    // TODO: make publisher's lifetime depend on node's lifetime 
+    // TODO: make publisher's lifetime depend on node's lifetime
     pub fn create_publisher<T>(&self, topic: &str, qos: QoSProfile) -> RclResult<Publisher<T>>
     where
         T: rclrs_common::traits::MessageDefinition<T>,
@@ -87,7 +87,7 @@ impl Node {
         Publisher::<T>::new(self, topic, qos)
     }
 
-    // TODO: make subscription's lifetime depend on node's lifetime 
+    // TODO: make subscription's lifetime depend on node's lifetime
     pub fn create_subscription<T>(
         &mut self,
         topic: &str,
@@ -99,7 +99,7 @@ impl Node {
     {
         let subscription = Rc::new(Subscription::<T>::new(self, topic, qos, callback)?);
         self.subscriptions
-            .push(Rc::downgrade(&subscription) as Weak<SubscriptionBase>);
+            .push(Rc::downgrade(&subscription) as Weak<dyn SubscriptionBase>);
         Ok(subscription)
     }
 }
