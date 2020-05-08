@@ -18,11 +18,25 @@ pub enum QoSDurabilityPolicy {
     Volatile = 2,
 }
 
+pub enum QoSLivelinessPolicy {
+    SystemDefault = 0,
+    Automatic = 1,
+    ManualByNode = 2,
+    ManualByTopic = 3
+}
+
+pub const SYSTEM_DEFAULT: isize = 0;
+pub const TIME_DEFAULT: rmw_time_t = rmw_time_t {sec:0,nsec:0};
+
 pub struct QoSProfile {
     pub history: QoSHistoryPolicy,
     pub depth: isize,
     pub reliability: QoSReliabilityPolicy,
     pub durability: QoSDurabilityPolicy,
+    pub deadline: rmw_time_t,
+    pub liveliness: QoSLivelinessPolicy,
+    pub lifespan: rmw_time_t,
+    pub liveliness_lease_duration: rmw_time_t,
     pub avoid_ros_namespace_conventions: bool,
 }
 
@@ -31,6 +45,10 @@ pub const QOS_PROFILE_SENSOR_DATA: QoSProfile = QoSProfile {
     depth: 5,
     reliability: QoSReliabilityPolicy::BestEffort,
     durability: QoSDurabilityPolicy::Volatile,
+    deadline: TIME_DEFAULT,
+    liveliness: QoSLivelinessPolicy::SystemDefault,
+    lifespan: TIME_DEFAULT,
+    liveliness_lease_duration: TIME_DEFAULT,
     avoid_ros_namespace_conventions: false,
 };
 
@@ -39,6 +57,10 @@ pub const QOS_PROFILE_PARAMETERS: QoSProfile = QoSProfile {
     depth: 1000,
     reliability: QoSReliabilityPolicy::Reliable,
     durability: QoSDurabilityPolicy::Volatile,
+    deadline: TIME_DEFAULT,
+    liveliness: QoSLivelinessPolicy::SystemDefault,
+    lifespan: TIME_DEFAULT,
+    liveliness_lease_duration: TIME_DEFAULT,
     avoid_ros_namespace_conventions: false,
 };
 
@@ -47,6 +69,10 @@ pub const QOS_PROFILE_DEFAULT: QoSProfile = QoSProfile {
     depth: 10,
     reliability: QoSReliabilityPolicy::Reliable,
     durability: QoSDurabilityPolicy::Volatile,
+    deadline: TIME_DEFAULT,
+    liveliness: QoSLivelinessPolicy::SystemDefault,
+    lifespan: TIME_DEFAULT,
+    liveliness_lease_duration: TIME_DEFAULT,
     avoid_ros_namespace_conventions: false,
 };
 
@@ -55,6 +81,10 @@ pub const QOS_PROFILE_SERVICES_DEFAULT: QoSProfile = QoSProfile {
     depth: 10,
     reliability: QoSReliabilityPolicy::Reliable,
     durability: QoSDurabilityPolicy::Volatile,
+    deadline: TIME_DEFAULT,
+    liveliness: QoSLivelinessPolicy::SystemDefault,
+    lifespan: TIME_DEFAULT,
+    liveliness_lease_duration: TIME_DEFAULT,
     avoid_ros_namespace_conventions: false,
 };
 
@@ -63,16 +93,22 @@ pub const QOS_PROFILE_PARAMETER_EVENTS: QoSProfile = QoSProfile {
     depth: 1000,
     reliability: QoSReliabilityPolicy::Reliable,
     durability: QoSDurabilityPolicy::Volatile,
+    deadline: TIME_DEFAULT,
+    liveliness: QoSLivelinessPolicy::SystemDefault,
+    lifespan: TIME_DEFAULT,
+    liveliness_lease_duration: TIME_DEFAULT,
     avoid_ros_namespace_conventions: false,
 };
-
-pub const SYSTEM_DEFAULT: isize = 0;
 
 pub const QOS_PROFILE_SYSTEM_DEFAULT: QoSProfile = QoSProfile {
     history: QoSHistoryPolicy::SystemDefault,
     depth: SYSTEM_DEFAULT,
     reliability: QoSReliabilityPolicy::SystemDefault,
     durability: QoSDurabilityPolicy::SystemDefault,
+    deadline: TIME_DEFAULT,
+    liveliness: QoSLivelinessPolicy::SystemDefault,
+    lifespan: TIME_DEFAULT,
+    liveliness_lease_duration: TIME_DEFAULT,
     avoid_ros_namespace_conventions: false,
 };
 
@@ -83,6 +119,10 @@ impl From<QoSProfile> for rmw_qos_profile_t {
             depth: qos.depth as usize,
             reliability: qos.reliability.into(),
             durability: qos.durability.into(),
+            deadline: qos.deadline,
+            liveliness: qos.liveliness.into(),
+            lifespan: qos.lifespan,
+            liveliness_lease_duration: qos.liveliness_lease_duration,
             avoid_ros_namespace_conventions: qos.avoid_ros_namespace_conventions,
         }
     }
@@ -97,7 +137,9 @@ impl From<QoSHistoryPolicy> for rmw_qos_history_policy_t {
             QoSHistoryPolicy::KeepLast => {
                 rmw_qos_history_policy_t::RMW_QOS_POLICY_HISTORY_KEEP_LAST
             }
-            QoSHistoryPolicy::KeepAll => rmw_qos_history_policy_t::RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+            QoSHistoryPolicy::KeepAll => {
+                rmw_qos_history_policy_t::RMW_QOS_POLICY_HISTORY_KEEP_ALL
+            },
         }
     }
 }
@@ -129,6 +171,25 @@ impl From<QoSDurabilityPolicy> for rmw_qos_durability_policy_t {
             }
             QoSDurabilityPolicy::Volatile => {
                 rmw_qos_durability_policy_t::RMW_QOS_POLICY_DURABILITY_VOLATILE
+            }
+        }
+    }
+}
+
+impl From<QoSLivelinessPolicy> for rmw_qos_liveliness_policy_t {
+    fn from(policy: QoSLivelinessPolicy) -> Self {
+        match policy {
+            QoSLivelinessPolicy::SystemDefault => {
+                rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT
+            }
+            QoSLivelinessPolicy::Automatic => {
+                rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_AUTOMATIC
+            }
+            QoSLivelinessPolicy::ManualByNode => {
+                rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE
+            }
+            QoSLivelinessPolicy::ManualByTopic => {
+                rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC
             }
         }
     }

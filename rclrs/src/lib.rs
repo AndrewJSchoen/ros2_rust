@@ -37,12 +37,13 @@ pub fn spin(node: &Node) -> RclResult {
 
 pub fn spin_once(node: &Node, timeout: i64) -> RclResult {
     let mut wait_set_handle = unsafe { rcl_get_zero_initialized_wait_set() };
-
+    let context_handle = &mut *node.context.get_mut();
     let number_of_subscriptions = node.subscriptions.len();
     let number_of_guard_conditions = 0;
     let number_of_timers = 0;
     let number_of_clients = 0;
     let number_of_services = 0;
+    let number_of_events = 0;
 
     unsafe {
         rcl_wait_set_init(
@@ -52,6 +53,8 @@ pub fn spin_once(node: &Node, timeout: i64) -> RclResult {
             number_of_timers,
             number_of_clients,
             number_of_services,
+            number_of_events,
+            context_handle,
             rcutils_get_default_allocator(),
         )
         .ok()?;
